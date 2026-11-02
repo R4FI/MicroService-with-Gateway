@@ -1,0 +1,136 @@
+# Docker Compose Configuration
+# Orchestrates all microservices and the API Gateway
+# Version 3.8 provides modern features and compatibility
+
+version: "3.8"
+
+# Define all services (containers) that make up the application
+services:
+  # API Gateway Service
+  # This is the single entry point for all external requests
+  api-gateway:
+    # Build the gateway using the custom Dockerfile
+    build:
+      context: . # Build context is the root directory
+      dockerfile: Dockerfile.gateway # Use the gateway-specific Dockerfile
+
+    # Container name for easy identification
+    container_name: api-gateway
+
+    # Port mapping: host:container
+    # External requests to localhost:80 are forwarded to container port 80
+    ports:
+      - "80:80"
+
+    # Service dependencies - gateway waits for these services to start
+    # This ensures backend services are running before gateway starts
+    depends_on:
+      - usermanagementservice
+      - productservice
+      - orderservice
+
+    # Connect to custom network for inter-service communication
+    networks:
+      - microservices-network
+
+    # Restart policy - always restart if the container stops
+    restart: unless-stopped
+
+  # User Management Service
+  # Handles all user-related operations
+  usermanagementservice:
+    # Build from the UserManagementService directory
+    build:
+      context: ./UserManagementService # Build context
+      dockerfile: Dockerfile # Dockerfile in that directory
+
+    # Container name for easy identification
+    container_name: usermanagementservice
+
+    # Internal port exposure (only accessible within Docker network)
+    # No host port mapping - only gateway can access this service
+    expose:
+      - "5126"
+
+    # Environment variables for the service
+    environment:
+      # Set ASP.NET Core environment to Development for detailed logging
+      - ASPNETCORE_ENVIRONMENT=Development
+
+      # Configure service to listen on all network interfaces
+      - ASPNETCORE_URLS=http://+:5126
+
+    # Connect to custom network
+    networks:
+      - microservices-network
+
+    # Restart policy
+    restart: unless-stopped
+
+  # Product Service
+  # Handles all product-related operations
+  productservice:
+    # Build from the ProductService directory
+    build:
+      context: ./ProductService # Build context
+      dockerfile: Dockerfile # Dockerfile in that directory
+
+    # Container name for easy identification
+    container_name: productservice
+
+    # Internal port exposure (only accessible within Docker network)
+    # No host port mapping - only gateway can access this service
+    expose:
+      - "5171"
+
+    # Environment variables for the service
+    environment:
+      # Set ASP.NET Core environment to Development for detailed logging
+      - ASPNETCORE_ENVIRONMENT=Development
+
+      # Configure service to listen on all network interfaces
+      - ASPNETCORE_URLS=http://+:5171
+
+    # Connect to custom network
+    networks:
+      - microservices-network
+
+    # Restart policy
+    restart: unless-stopped
+
+  # Order Service
+  # Handles all order-related operations
+
+  orderservice:
+    # Build from the orderservice directory
+    build:
+      context: ./orderservice # Build context
+      dockerfile: Dockerfile # Dockerfile in that directory
+
+    # Container name for easy identification
+    container_name: orderservice
+
+    # Internal port exposure (only accessible within Docker network)
+    # No host port mapping - only gateway can access this service
+    expose:
+      - "5003"
+
+    # Environment variables for the service
+    environment:
+      # Set Spring profile to development
+      - SPRING_PROFILES_ACTIVE=dev
+
+    # Connect to custom network
+    networks:
+      - microservices-network
+
+    # Restart policy
+    restart: unless-stopped
+
+# Define custom network for inter-service communication
+networks:
+  # Bridge network allows containers to communicate with each other
+  # Docker provides DNS resolution so services can find each other by name
+  microservices-network:
+    driver: bridge # Default driver for single-host networking
+    # This network isolates our services from other Docker containers

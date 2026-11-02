@@ -1,0 +1,53 @@
+# .dockerignore - Excludes files from Docker build context
+# This speeds up builds and reduces image size
+
+# Git files and version control
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*.md
+LICENSE
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build outputs (exclude from copying, will be built inside container)
+**/bin/
+**/obj/
+**/target/
+**/out/
+**/build/
+
+# Dependency directories
+**/node_modules/
+**/packages/
+
+# Test coverage
+**/coverage/
+**/*.coverage
+
+# Logs
+**/*.log
+**/logs/
+
+# Temporary files
+**/*.tmp
+**/*.temp
+**/tmp/
+
+# Docker files themselves (don't need to copy into containers)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
